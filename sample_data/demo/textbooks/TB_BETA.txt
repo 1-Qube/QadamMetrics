@@ -1,0 +1,11 @@
+
+Chapter 1 Expressions
+Definition: An expression contains symbols.
+Example: x + x = 2x.
+Exercise 1. Simplify x + x.
+
+Chapter 2 Quadratic equations
+Definition: Use the quadratic formula.
+Explanation: The formula can be applied immediately.
+Example: For x^2 + 5x + 6 = 0, substitute a, b, and c.
+Exercise 1. Solve x^2 + 5x + 6 = 0 with the formula.

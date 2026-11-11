@@ -1,0 +1,24 @@
+
+Chapter 1 Algebraic expressions
+Definition: An algebraic expression is a combination of numbers, variables, and operations.
+Explanation: Students rewrite expressions by combining like terms before they solve equations.
+Example: 3x + 2x = 5x.
+Exercise 1. Simplify 4a + 7a.
+Exercise 2. Identify the variable in 6y + 1.
+
+Chapter 2 Factoring
+Definition: Factoring writes an expression as a product.
+Explanation: Factoring algebraic expressions prepares students for quadratic equations. Common factors are removed first, then simple trinomials.
+Example: x^2 + 5x + 6 = (x + 2)(x + 3).
+Exercise 1. Factor x^2 + 7x + 12.
+Exercise 2. Factor x^2 + 5x + 6.
+Exercise 3. Compare x^2 + 5x + 6 with x^2 + 7x + 12 and explain the pattern.
+Exercise 4. Solve x^2 + 5x + 6 = 0 by factoring.
+Question: Justify why (x + 2) and (x + 3) are factors of x^2 + 5x + 6.
+
+Chapter 3 Quadratic equations
+Definition: A quadratic equation has the form ax^2 + bx + c = 0.
+Explanation: This chapter uses factoring before the quadratic formula.
+Example: x^2 - 9 = (x - 3)(x + 3).
+Exercise 1. Solve x^2 - 9 = 0.
+Exercise 2. Calculate the roots of x^2 + 5x + 6 = 0.

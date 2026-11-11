@@ -1,0 +1,18 @@
+topic_id,topic_name,subject_id,subject_name,grade_level,description
+T01,Integers and operations,MATH,Mathematics,7,Synthetic curriculum topic for the demonstration dataset.
+T02,Fractions and decimals,MATH,Mathematics,7,Synthetic curriculum topic for the demonstration dataset.
+T03,Ratios and proportions,MATH,Mathematics,7,Synthetic curriculum topic for the demonstration dataset.
+T04,Algebraic expressions,MATH,Mathematics,7,Synthetic curriculum topic for the demonstration dataset.
+T05,Linear equations,MATH,Mathematics,8,Synthetic curriculum topic for the demonstration dataset.
+T06,Factoring,MATH,Mathematics,8,Synthetic curriculum topic for the demonstration dataset.
+T07,Systems of linear equations,MATH,Mathematics,8,Synthetic curriculum topic for the demonstration dataset.
+T08,Functions introduction,MATH,Mathematics,8,Synthetic curriculum topic for the demonstration dataset.
+T09,Geometry angles and triangles,MATH,Mathematics,8,Synthetic curriculum topic for the demonstration dataset.
+T10,Pythagorean theorem,MATH,Mathematics,8,Synthetic curriculum topic for the demonstration dataset.
+T11,Descriptive statistics,MATH,Mathematics,8,Synthetic curriculum topic for the demonstration dataset.
+T12,Quadratic equations,MATH,Mathematics,9,Synthetic curriculum topic for the demonstration dataset.
+T13,Quadratic functions,MATH,Mathematics,9,Synthetic curriculum topic for the demonstration dataset.
+T14,Inequalities,MATH,Mathematics,9,Synthetic curriculum topic for the demonstration dataset.
+T15,Probability,MATH,Mathematics,9,Synthetic curriculum topic for the demonstration dataset.
+T16,Similarity and congruence,MATH,Mathematics,9,Synthetic curriculum topic for the demonstration dataset.
+T17,Introduction to trigonometry,MATH,Mathematics,9,Synthetic curriculum topic for the demonstration dataset.

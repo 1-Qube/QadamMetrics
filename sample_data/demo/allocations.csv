@@ -1,0 +1,13 @@
+topic_id,subject_id,hours,min_hours,max_hours,importance_weight
+T04,MATH,8,4,16,1.0
+T05,MATH,12,6,18,1.1
+T06,MATH,8,4,18,1.4
+T07,MATH,8,4,14,1.0
+T08,MATH,8,4,14,1.0
+T09,MATH,10,4,16,1.0
+T10,MATH,6,3,12,1.0
+T11,MATH,6,3,12,0.8
+T12,MATH,14,6,20,1.3
+T13,MATH,8,4,14,1.1
+T14,MATH,6,3,12,1.0
+T15,MATH,6,2,10,0.9

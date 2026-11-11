@@ -1,0 +1,17 @@
+from app.models.entities import (  # noqa: F401
+    Allocation,
+    Artifact,
+    Assessment,
+    Dataset,
+    ImportIssue,
+    ImportJob,
+    Material,
+    Prerequisite,
+    Question,
+    Report,
+    Response,
+    School,
+    Student,
+    Subject,
+    Topic,
+)

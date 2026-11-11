@@ -1,0 +1,34 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: qadam
+      POSTGRES_PASSWORD: qadam
+      POSTGRES_DB: qadammetrics
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qadam -d qadammetrics"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    environment:
+      ENVIRONMENT: production
+      DATABASE_URL: postgresql+psycopg://qadam:qadam@db:5432/qadammetrics
+      AUTO_CREATE_TABLES: "false"
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      QM_API_KEY: ${QM_API_KEY:-}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
