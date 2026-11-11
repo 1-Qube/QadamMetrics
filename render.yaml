@@ -1,0 +1,26 @@
+# Render blueprint. Secrets are filled in the Render dashboard, never in this file.
+services:
+  - type: web
+    name: qadammetrics-api
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: AUTO_CREATE_TABLES
+        value: "false"
+      - key: SEED_DEMO
+        value: "true"
+      - key: DATABASE_URL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.0-flash
+      - key: CORS_ORIGINS
+        sync: false
+      - key: QM_API_KEY
+        sync: false
+      - key: LOG_ROW_PAYLOADS
+        value: "false"

@@ -2,7 +2,7 @@
 
 Curriculum intelligence engine for methodologists. It ingests assessment data, describes topic performance with uncertainty, reviews a knowledge graph, compares textbook structure, explores hour allocations under explicit assumptions, and refuses causal certainty it cannot earn.
 
-This repository is the backend. There is no dashboard yet. Use `/docs` or the HTTP API. A later frontend can consume the same JSON.
+This repository is the backend plus a Next.js dashboard in `frontend/`. Locally, use `/docs` or the dashboard. Cloud setup is in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). A public URL is not claimed until Vercel, Render, and Supabase have been connected.
 
 Synthetic demonstration data is labeled `evidence_class: synthetic`. It is not evidence about real students.
 
@@ -62,11 +62,21 @@ Details and example bodies are in [docs/API.md](docs/API.md). Methods are in [do
 
 On this machine the last full run was 30 passed. Re-run before relying on that count.
 
+## Dashboard
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+Open http://localhost:3000. The API defaults to http://127.0.0.1:8000. Set `NEXT_PUBLIC_API_URL` for any other host. Do not put `GEMINI_API_KEY` in the frontend.
+
 ## Production
 
-See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). PostgreSQL is the production database. Docker Compose is prepared. It was not booted here because Docker is not installed on the build machine.
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). The intended hosts are Vercel, Render, and Supabase PostgreSQL. Secrets stay in those dashboards. `.env` is not committed.
 
-Set `GEMINI_API_KEY` only in the environment. The platform works without it.
+Set `GEMINI_API_KEY` only on the API host. The platform works without it. Production refuses SQLite and `CORS_ORIGINS=*`.
 
 ## Limits
 

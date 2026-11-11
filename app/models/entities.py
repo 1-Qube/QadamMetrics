@@ -43,6 +43,8 @@ class Dataset(Base):
     is_synthetic: Mapped[bool] = mapped_column(Boolean, default=False)
     evidence_class: Mapped[str] = mapped_column(String(32), default="uploaded")
     status: Mapped[str] = mapped_column(String(32), default="ready")
+    visibility: Mapped[str] = mapped_column(String(16), default="public", index=True)
+    owner_token: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     summary: Mapped[dict] = mapped_column(JSON, default=dict)
 

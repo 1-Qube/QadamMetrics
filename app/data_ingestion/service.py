@@ -40,6 +40,8 @@ def create_dataset(
     description: str = "",
     source_type: str = "csv_upload",
     is_synthetic: bool = False,
+    visibility: str = "private",
+    owner_token: str | None = None,
 ) -> Dataset:
     dataset = Dataset(
         name=name,
@@ -48,6 +50,8 @@ def create_dataset(
         is_synthetic=is_synthetic,
         evidence_class="synthetic" if is_synthetic else "uploaded",
         status="importing",
+        visibility=visibility,
+        owner_token=owner_token,
     )
     session.add(dataset)
     session.flush()
@@ -96,6 +100,8 @@ def ingest_parsed(
     description: str = "",
     is_synthetic: bool = False,
     source_type: str = "csv_upload",
+    visibility: str = "private",
+    owner_token: str | None = None,
 ) -> dict:
     dataset = create_dataset(
         session,
@@ -103,6 +109,8 @@ def ingest_parsed(
         description=description,
         source_type=source_type,
         is_synthetic=is_synthetic,
+        visibility=visibility,
+        owner_token=owner_token,
     )
     job = ImportJob(
         dataset_id=dataset.id,

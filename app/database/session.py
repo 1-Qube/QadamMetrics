@@ -26,13 +26,19 @@ def get_engine() -> Engine:
     if _engine is None:
         settings = get_settings()
         connect_args: dict = {}
+        engine_kwargs: dict = {"pool_pre_ping": True, "future": True}
         if settings.is_sqlite:
             connect_args["check_same_thread"] = False
+        else:
+            engine_kwargs["pool_size"] = settings.db_pool_size
+            engine_kwargs["max_overflow"] = settings.db_max_overflow
+            engine_kwargs["pool_recycle"] = 300
+            if ":6543" in settings.database_url or "pooler.supabase.com" in settings.database_url:
+                connect_args["prepare_threshold"] = None
         _engine = create_engine(
             settings.database_url,
             connect_args=connect_args,
-            pool_pre_ping=True,
-            future=True,
+            **engine_kwargs,
         )
         if settings.is_sqlite:
             @event.listens_for(_engine, "connect")
@@ -70,6 +76,29 @@ def init_db() -> None:
 
     if settings.auto_create_tables:
         Base.metadata.create_all(bind=get_engine())
+    else:
+        _ensure_access_columns()
+
+
+def _ensure_access_columns() -> None:
+    """Keep older databases readable if Alembic has not been run yet."""
+    from sqlalchemy import inspect, text
+
+    engine = get_engine()
+    inspector = inspect(engine)
+    if "datasets" not in inspector.get_table_names():
+        return
+    columns = {column["name"] for column in inspector.get_columns("datasets")}
+    statements = []
+    if "owner_token" not in columns:
+        statements.append("ALTER TABLE datasets ADD COLUMN owner_token VARCHAR(64)")
+    if "visibility" not in columns:
+        statements.append("ALTER TABLE datasets ADD COLUMN visibility VARCHAR(16) DEFAULT 'public'")
+    if not statements:
+        return
+    with engine.begin() as connection:
+        for statement in statements:
+            connection.execute(text(statement))
 
 
 def check_db() -> bool:

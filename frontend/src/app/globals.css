@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-page: #FAF9F6;
+    --bg-surface: #FFFFFF;
+    --bg-subtle: #F3F2EE;
+    --text-primary: #151515;
+    --text-secondary: #70706B;
+    --text-muted: #95958E;
+    --border-subtle: #E6E5E0;
+    --border-strong: #D1D0C9;
+    --accent-lime: #C9F542;
+    --accent-lime-hover: #B8E830;
+    --accent-lime-light: #F4FCE3;
+    --accent-navy: #182B49;
+    --accent-navy-light: #243E6B;
+  }
+
+  body {
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Custom scrollbar for data tables and panels */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #D1D0C9;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #B3B2AA;
+}

@@ -19,9 +19,10 @@ from app.models.entities import Allocation, Artifact, Dataset, Material, Prerequ
 
 
 def require_dataset(session: Session, dataset_id: str) -> Dataset:
+    from app.core.access import assert_can_read
+
     dataset = session.get(Dataset, dataset_id)
-    if dataset is None:
-        raise NotFoundError(f"Dataset {dataset_id} was not found.")
+    assert_can_read(dataset)
     return dataset
 
 

@@ -5,12 +5,13 @@ from __future__ import annotations
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.analytics.methodology import methodology_catalog
+from app.core.access import assert_can_read, current_owner, new_owner_token
 from app.core.config import get_settings
 from app.core.errors import AppError, NotFoundError
 from app.data_ingestion.csv_loader import (
@@ -83,12 +84,23 @@ class ReportIn(BaseModel):
     title: str | None = None
 
 
-def _read_upload(upload: UploadFile) -> bytes:
+def _read_upload(upload: UploadFile, suffixes: tuple[str, ...] = (".csv", ".txt", ".pdf")) -> bytes:
     settings = get_settings()
+    name = (upload.filename or "").lower()
+    if suffixes and not name.endswith(suffixes):
+        raise AppError("invalid_file_type", "Upload must be one of: " + ", ".join(suffixes), 415)
     payload = upload.file.read(settings.max_upload_mb * 1024 * 1024 + 1)
     if len(payload) > settings.max_upload_mb * 1024 * 1024:
         raise AppError("payload_too_large", f"Upload exceeds {settings.max_upload_mb} MB.", 413)
     return payload
+
+
+def _upload_owner() -> tuple[str | None, str]:
+    token = current_owner()
+    if get_settings().environment == "production":
+        token = token or new_owner_token()
+        return token, "private"
+    return token, "private" if token else "public"
 
 
 @router.get("/methodology")
@@ -100,7 +112,9 @@ def methodology() -> dict:
 def list_datasets(session: Session = Depends(get_db)) -> dict:
     from app.models.entities import Dataset
 
-    rows = session.scalars(select(Dataset).order_by(Dataset.created_at.desc())).all()
+    from app.core.access import can_read
+
+    rows = [row for row in session.scalars(select(Dataset).order_by(Dataset.created_at.desc())).all() if can_read(row)]
     return {
         "data": [
             {
@@ -109,6 +123,7 @@ def list_datasets(session: Session = Depends(get_db)) -> dict:
                 "evidence_class": row.evidence_class,
                 "is_synthetic": row.is_synthetic,
                 "status": row.status,
+                "visibility": row.visibility,
                 "created_at": row.created_at.isoformat(),
                 "summary": row.summary,
             }
@@ -128,7 +143,8 @@ def import_dataset(
     allocations: UploadFile | None = File(default=None),
     session: Session = Depends(get_db),
 ) -> dict:
-    parsed_responses = parse_responses_csv(_read_upload(responses), responses.filename or "responses.csv")
+    owner, visibility = _upload_owner()
+    parsed_responses = parse_responses_csv(_read_upload(responses, (".csv",)), responses.filename or "responses.csv")
     parsed_topics = parse_topics_csv(_read_upload(topics)) if topics is not None else None
     parsed_prereq = parse_prerequisites_csv(_read_upload(prerequisites)) if prerequisites is not None else None
     parsed_alloc = parse_allocations_csv(_read_upload(allocations)) if allocations is not None else None
@@ -141,7 +157,10 @@ def import_dataset(
         prerequisites=parsed_prereq,
         allocations=parsed_alloc,
         is_synthetic=is_synthetic,
+        visibility=visibility,
+        owner_token=owner,
     )
+    result["visibility"] = visibility
     return {"data": result}
 
 
@@ -162,6 +181,8 @@ def load_demo(
         allocations=parse_allocations_csv(files["allocations.csv"]),
         is_synthetic=True,
         source_type="synthetic_demo",
+        visibility="public",
+        owner_token=None,
     )
     for external_id, text in bundle.textbooks.items():
         save_material_text(
@@ -181,8 +202,7 @@ def load_demo(
 @router.get("/datasets/{dataset_id}")
 def dataset_detail(dataset_id: str, session: Session = Depends(get_db)) -> dict:
     dataset = get_dataset(session, dataset_id)
-    if dataset is None:
-        raise NotFoundError("Dataset was not found.")
+    assert_can_read(dataset)
     return {
         "data": {
             "id": dataset.id,
@@ -243,6 +263,7 @@ def dataset_issues(dataset_id: str, limit: int = Query(default=100, le=500), ses
 
 @router.delete("/datasets/{dataset_id}")
 def remove_dataset(dataset_id: str, session: Session = Depends(get_db)) -> dict:
+    assert_can_read(get_dataset(session, dataset_id))
     if not delete_dataset(session, dataset_id):
         raise NotFoundError("Dataset was not found.")
     return {"data": {"deleted": True, "dataset_id": dataset_id}}
@@ -350,7 +371,7 @@ def ingest_textbook(
     upload: UploadFile = File(...),
     session: Session = Depends(get_db),
 ) -> dict:
-    payload = _read_upload(upload)
+    payload = _read_upload(upload, (".txt", ".pdf"))
     text = ingest_upload(payload, upload.filename or "textbook.txt")
     result = save_material_text(session, dataset_id, material_id, title or material_id, text, upload.filename or "")
     return {"data": result}
@@ -491,30 +512,57 @@ def generate_report(body: ReportIn, session: Session = Depends(get_db)) -> dict:
     report.json_path = str(json_path)
     report.pdf_path = str(pdf_path)
     report.csv_path = str(csv_path)
+    report.summary = payload
     session.commit()
     return {"data": {"report_id": report.id, "title": report.title, "formats": ["json", "pdf", "csv"]}}
 
 
 @router.get("/reports/{report_id}")
 def report_detail(report_id: str, session: Session = Depends(get_db)) -> dict:
+    report = _owned_report(session, report_id)
+    payload = report.summary or {}
+    return {"data": payload, "meta": {"report_id": report.id}}
+
+
+def _owned_report(session: Session, report_id: str) -> Report:
     report = session.get(Report, report_id)
     if report is None:
         raise NotFoundError("Report was not found.")
-    payload = __import__("json").loads(Path(report.json_path).read_text(encoding="utf-8"))
-    return {"data": payload, "meta": {"report_id": report.id}}
+    assert_can_read(get_dataset(session, report.dataset_id))
+    return report
+
+
+def _report_bytes(report: Report, format: str) -> tuple[bytes, str, str]:
+    payload = report.summary or {}
+    if format == "json":
+        import json
+
+        return json.dumps(payload, ensure_ascii=False).encode("utf-8"), "application/json", "json"
+    settings = get_settings()
+    directory = settings.data_path / "reports"
+    directory.mkdir(parents=True, exist_ok=True)
+    if format == "pdf":
+        path = directory / f"{report.id}.pdf"
+        if not path.exists():
+            write_pdf(path, payload)
+        return path.read_bytes(), "application/pdf", "pdf"
+    if format == "csv":
+        path = directory / f"{report.id}.zip"
+        if not path.exists():
+            write_csv_zip(path, payload)
+        return path.read_bytes(), "application/zip", "zip"
+    raise AppError("invalid_format", "format must be pdf, csv, or json.", 400)
 
 
 @router.get("/reports/{report_id}/download")
 def report_download(report_id: str, format: str = "pdf", session: Session = Depends(get_db)):
-    report = session.get(Report, report_id)
-    if report is None:
-        raise NotFoundError("Report was not found.")
-    path = {"pdf": report.pdf_path, "csv": report.csv_path, "json": report.json_path}.get(format)
-    if not path:
-        raise AppError("invalid_format", "format must be pdf, csv, or json.", 400)
-    media = {"pdf": "application/pdf", "csv": "application/zip", "json": "application/json"}[format]
-    filename = f"qadammetrics-{report.id}.{ 'zip' if format == 'csv' else format}"
-    return FileResponse(path, media_type=media, filename=filename)
+    report = _owned_report(session, report_id)
+    body, media, extension = _report_bytes(report, format)
+    return Response(
+        content=body,
+        media_type=media,
+        headers={"Content-Disposition": f'attachment; filename="qadammetrics-{report.id}.{extension}"'},
+    )
 
 
 @router.get("/ai/status")

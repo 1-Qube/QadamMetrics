@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     data_dir: str = "./data"
     log_level: str = "INFO"
     log_row_payloads: bool = False
+    seed_demo: bool = False
+    db_pool_size: int = 5
+    db_max_overflow: int = 2
 
     @field_validator("api_key", "gemini_api_key", mode="before")
     @classmethod
@@ -59,3 +62,15 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+
+def validate_runtime(settings: Settings | None = None) -> None:
+    settings = settings or get_settings()
+    if settings.environment != "production":
+        return
+    if settings.is_sqlite:
+        raise RuntimeError("Production requires a PostgreSQL DATABASE_URL. SQLite is not persistent on a cloud host.")
+    if settings.cors_origins.strip() in {"", "*"}:
+        raise RuntimeError("Production CORS_ORIGINS must be an explicit list of https origins, not *.")
+    if settings.auto_create_tables:
+        raise RuntimeError("Set AUTO_CREATE_TABLES=false in production and run Alembic.")

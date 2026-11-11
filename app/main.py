@@ -10,9 +10,11 @@ from fastapi.responses import JSONResponse
 
 from app import __version__
 from app.api.routes import router
-from app.core.config import get_settings
+from app.core.access import set_owner_token
+from app.core.config import get_settings, validate_runtime
 from app.core.errors import AppError
 from app.core.logging_config import configure_logging
+from app.core.rate_limit import rate_limit_middleware
 from app.database.session import check_db, init_db
 
 logger = logging.getLogger(__name__)
@@ -21,8 +23,14 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     configure_logging()
+    settings = get_settings()
+    validate_runtime(settings)
     init_db()
-    logger.info("QadamMetrics started")
+    if settings.seed_demo:
+        from app.demo.seed import seed_public_demo
+
+        seed_public_demo()
+    logger.info("QadamMetrics started environment=%s ai_configured=%s", settings.environment, settings.ai_configured)
     yield
 
 
@@ -46,6 +54,12 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.middleware("http")(rate_limit_middleware)
+
+    @app.middleware("http")
+    async def owner_context(request: Request, call_next):
+        set_owner_token(request.headers.get("X-Owner-Token"))
+        return await call_next(request)
 
     @app.middleware("http")
     async def api_key_guard(request: Request, call_next):
