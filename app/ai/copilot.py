@@ -91,16 +91,32 @@ def _gemini(task: str, facts: dict, question: str | None, api_key: str, model: s
         ],
         "facts": facts,
     }
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
-    body = {
-        "contents": [{"role": "user", "parts": [{"text": json.dumps(prompt, ensure_ascii=False)}]}],
-        "generationConfig": {"temperature": 0.2},
-    }
-    response = httpx.post(url, params={"key": api_key}, json=body, timeout=timeout)
-    response.raise_for_status()
-    data = response.json()
-    parts = data["candidates"][0]["content"]["parts"]
-    return "\n".join(part.get("text", "") for part in parts).strip()
+    candidate_models = [model]
+    for m in ["gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"]:
+        if m not in candidate_models:
+            candidate_models.append(m)
+
+    last_exc = None
+    for cand in candidate_models:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{cand}:generateContent"
+        body = {
+            "contents": [{"role": "user", "parts": [{"text": json.dumps(prompt, ensure_ascii=False)}]}],
+            "generationConfig": {"temperature": 0.2},
+        }
+        try:
+            response = httpx.post(url, params={"key": api_key}, json=body, timeout=timeout)
+            response.raise_for_status()
+            data = response.json()
+            parts = data["candidates"][0]["content"]["parts"]
+            return "\n".join(part.get("text", "") for part in parts).strip()
+        except Exception as exc:
+            logger.warning("Gemini candidate model %s failed: %s", cand, exc)
+            last_exc = exc
+            continue
+
+    if last_exc:
+        raise last_exc
+    raise RuntimeError("No candidate Gemini models succeeded")
 
 
 def deterministic_explanation(task: str, facts: dict, question: str | None = None) -> str:

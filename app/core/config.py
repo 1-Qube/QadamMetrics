@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     auto_create_tables: bool = True
     api_key: str | None = Field(default=None, alias="QM_API_KEY")
     gemini_api_key: str | None = None
-    gemini_model: str = "gemini-2.0-flash"
+    gemini_model: str = "gemini-3.5-flash"
     gemini_timeout_seconds: float = 45.0
     cors_origins: str = "*"
     max_upload_mb: int = 32
