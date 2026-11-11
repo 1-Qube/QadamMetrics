@@ -40,6 +40,19 @@ class Settings(BaseSettings):
         text = str(value).strip()
         return text or None
 
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def normalize_database_url(cls, value: object) -> object:
+        if not value:
+            return value
+        text = str(value).strip()
+        # If user inadvertently pasted postgres:// or postgresql:// without the psycopg driver prefix
+        if text.startswith("postgres://"):
+            text = "postgresql+psycopg://" + text[len("postgres://"):]
+        elif text.startswith("postgresql://"):
+            text = "postgresql+psycopg://" + text[len("postgresql://"):]
+        return text
+
     @property
     def is_sqlite(self) -> bool:
         return self.database_url.startswith("sqlite")
