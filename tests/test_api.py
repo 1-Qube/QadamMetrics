@@ -98,6 +98,7 @@ def test_demo_pipeline_endpoints(client):
 
 def test_api_key_required_when_configured(tmp_path, monkeypatch):
     monkeypatch.setenv("DATABASE_URL", "sqlite:///" + (tmp_path / "k.db").as_posix())
+    monkeypatch.setenv("AUTO_CREATE_TABLES", "true")
     monkeypatch.setenv("DATA_DIR", str(tmp_path / "data"))
     monkeypatch.setenv("QM_API_KEY", "test-key")
     monkeypatch.setenv("GEMINI_API_KEY", "")
