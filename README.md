@@ -1,8 +1,11 @@
 # QadamMetrics
 
+> **Live Application**: [https://qadam-metrics-6cb2.vercel.app](https://qadam-metrics-6cb2.vercel.app)  
+> **API Backend**: [https://qadammetrics-api-2mli.onrender.com](https://qadammetrics-api-2mli.onrender.com)
+
 Curriculum intelligence engine for methodologists. It ingests assessment data, describes topic performance with uncertainty, reviews a knowledge graph, compares textbook structure, explores hour allocations under explicit assumptions, and refuses causal certainty it cannot earn.
 
-This repository is the backend plus a Next.js dashboard in `frontend/`. Locally, use `/docs` or the dashboard. Cloud setup is in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). A public URL is not claimed until Vercel, Render, and Supabase have been connected.
+This repository contains both the FastAPI analytical backend and the Next.js dashboard in `frontend/`. Cloud deployment details are documented in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 Synthetic demonstration data is labeled `evidence_class: synthetic`. It is not evidence about real students.
 
